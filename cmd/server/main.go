@@ -54,6 +54,10 @@ func postsHandler(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+func helloHandler(c *gin.Context) {
+	c.String(http.StatusOK, "Hello")
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -78,6 +82,6 @@ func main() {
 	})
 	router.GET("/posts", postsHandler(db))
 	router.GET("/post/:title", postHandler(db))
-
+	router.GET("/hello", helloHandler)
 	router.Run(":" + port)
 }
