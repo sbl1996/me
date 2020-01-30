@@ -1,0 +1,144 @@
+// package main
+
+// import (
+// 	"bytes"
+// 	"context"
+// 	"html/template"
+// 	"log"
+// 	"net/http"
+// 	"os"
+// 	"strconv"
+// 	"time"
+
+// 	"github.com/gin-gonic/gin"
+// 	"github.com/russross/blackfriday"
+// 	"go.mongodb.org/mongo-driver/bson"
+// 	"go.mongodb.org/mongo-driver/bson/primitive"
+// 	"go.mongodb.org/mongo-driver/mongo"
+// 	"go.mongodb.org/mongo-driver/mongo/options"
+// )
+
+// func repeatHandler(r int) gin.HandlerFunc {
+
+// 	return func(c *gin.Context) {
+// 		var buffer bytes.Buffer
+// 		for i := 0; i < r; i++ {
+// 			buffer.WriteString("Hello from Go!\n")
+// 		}
+// 		c.String(http.StatusOK, buffer.String())
+// 	}
+// }
+
+// type Post struct {
+// 	ID      *primitive.ObjectID `json:"ID" bson:"_id,omitempty"`
+// 	Title   string              `json:"title" bson:"title"`
+// 	Content string              `json:"content" bson:"content"`
+// 	Date    time.Time           `json:"date" bson:"date"`
+// }
+
+// func postHandler(db *mongo.Database) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// 		defer cancel()
+
+// 		coll := db.Collection("posts")
+
+// 		title := c.Param("title")
+
+// 		ret := coll.FindOne(ctx, bson.D{{"title", title}})
+// 		if ret.Err() != nil {
+// 			c.Writer.WriteHeader(http.StatusNotFound)
+// 			c.Writer.WriteString("Not Found")
+// 		} else {
+// 			p := Post{}
+// 			err := ret.Decode(&p)
+// 			if err != nil {
+// 				log.Fatalf("Error decoding document: %q", err)
+// 			}
+// 			postHTML := template.HTML(string(blackfriday.Run([]byte(p.Content))))
+// 			c.HTML(http.StatusOK, "post.tmpl.html", gin.H{
+// 				"title":   p.Title,
+// 				"content": postHTML,
+// 			})
+// 		}
+// 	}
+// }
+
+// func postsHandler(db *mongo.Database) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// 		defer cancel()
+
+// 		coll := db.Collection("posts")
+
+// 		cur, err := coll.Find(ctx, bson.D{}, options.Find().SetProjection(bson.D{{"title", 1}}))
+// 		if err != nil {
+// 			log.Fatalf("Error decoding document: %q", err)
+// 		}
+// 		defer cur.Close(ctx)
+
+// 		var titles []string
+// 		for cur.Next(ctx) {
+// 			p := Post{}
+// 			err := cur.Decode(&p)
+// 			if err != nil {
+// 				log.Fatalf("Error decoding document: %q", err)
+// 			}
+// 			titles = append(titles, p.Title)
+// 		}
+// 		if err := cur.Err(); err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		c.HTML(http.StatusOK, "posts.tmpl.html", gin.H{
+// 			"titles": titles,
+// 		})
+
+// 	}
+// }
+
+// func main() {
+// 	port := os.Getenv("PORT")
+// 	if port == "" {
+// 		log.Fatal("$PORT must be set")
+// 	}
+
+// 	tStr := os.Getenv("REPEAT")
+// 	repeat, err := strconv.Atoi(tStr)
+// 	if err != nil {
+// 		log.Printf("Error converting $REPEAT to an int: %q - Using default\n", err)
+// 		repeat = 5
+// 	}
+
+// 	mongodbURI := os.Getenv("MONGODB_URI")
+// 	dbStr := os.Getenv("DATABASE")
+// 	client, err := mongo.NewClient(options.Client().ApplyURI(mongodbURI))
+// 	if err != nil {
+// 		log.Printf("Error creating mongodb client: %q", err)
+// 	}
+
+// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// 	err = client.Connect(ctx)
+// 	if err != nil {
+// 		log.Fatalf("Error conencting: %q", err)
+// 	}
+// 	defer cancel()
+
+// 	db := client.Database(dbStr)
+
+// 	router := gin.New()
+// 	router.Use(gin.Logger())
+// 	router.LoadHTMLGlob("templates/*.tmpl.html")
+// 	router.Static("/static", "static")
+
+// 	router.GET("/", func(c *gin.Context) {
+
+// 		c.HTML(http.StatusOK, "index.tmpl.html", gin.H{
+// 			"title": "Getting Started with Go on Heroku",
+// 		})
+// 	})
+// 	router.GET("/posts", postsHandler(db))
+// 	router.GET("/post/:title", postHandler(db))
+// 	router.GET("/repeat", repeatHandler(repeat))
+
+// 	router.Run(":" + port)
+// }
