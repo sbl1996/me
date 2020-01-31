@@ -1,0 +1,41 @@
+<html>
+
+{{template "header.tmpl.html" .title}}
+
+<body>
+    {{template "nav.tmpl.html"}}
+
+    <main role="main" class="container p-4">
+        <div class="row">
+            <div class="col-md-8">
+                <h3>Edit Post</h3>
+                <form action="/api/post/update" method="POST" role="form">
+                    <div class="form-group d-none">
+                        <input type="number" class="form-control" name="id" value="{{.id}}" id="idInput">
+                    </div>
+                    <div class="form-group">
+                        <label for="titleInput">Title</label>
+                        <input type="text" class="form-control" name="title" value="{{.title}}" id="titleInput">
+                    </div>
+                    <div class="form-group">
+                        <label for="contentInput">Content</label>
+                        <textarea class="form-control" name="content" id="contentInput"
+                            rows="10">{{.content}}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateInput">Date</label>
+                        <input type="datetime-local" id="date" name="date" value="{{.date}}">
+                    </div>
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                {{template "sidebar.tmpl.html"}}
+            </div>
+
+        </div> <!-- row -->
+    </main>
+
+</body>
+
+</html>

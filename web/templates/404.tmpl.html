@@ -8,15 +8,6 @@
     <main role="main" class="container p-4">
         <div class="row">
             <div class="col-md-8">
-                <ul>
-                    {{range .titles}}
-                    <div class="item">
-                        <a href="/post?title={{.}}">
-                            <h5>{{.}}</h5>
-                        </a>
-                    </div>
-                    {{end}}
-                </ul>
             </div>
             <div class="col-md-4">
                 {{template "sidebar.tmpl.html"}}

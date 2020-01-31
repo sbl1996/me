@@ -11,6 +11,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/jinzhu/gorm v1.9.12
+	github.com/jinzhu/now v1.1.1
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/russross/blackfriday v2.0.0+incompatible
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
