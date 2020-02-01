@@ -25,10 +25,12 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 
+	router.NoRoute(func(c *gin.Context) {
+		c.File("web/public/index.html")
+	})
 	router.StaticFile("/manifest.json", "web/public/manifest.json")
 	router.StaticFile("/favicon.ico", "web/public/favicon.ico")
 	router.StaticFile("/", "web/public/index.html")
-	router.StaticFile("/logo192.png", "web/public/logo192.png")
 	router.Static("/static", "web/public")
 
 	router.GET("/api/post", api.GetPostHandler())
