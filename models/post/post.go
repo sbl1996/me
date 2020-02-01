@@ -11,9 +11,9 @@ import (
 
 type Post struct {
 	gorm.Model
-	Title   string
-	Content string
-	Date    time.Time
+	Title   string    `json:"title"`
+	Content string    `json:"content"`
+	Date    time.Time `json:"date"`
 }
 
 func GetByTitle(title string) (Post, error) {
@@ -30,32 +30,32 @@ func GetByID(id uint) (Post, error) {
 	return p, err
 }
 
-func GetAllPostTitles() []string {
+func GetAllPostTitles() ([]string, error) {
 	db := database.DB
 	var posts []Post
-	db.Order("date desc").Select("title").Find(&posts)
+	err := db.Order("date desc").Select("title").Find(&posts).Error
 
 	var titles []string
 	for _, p := range posts {
 		titles = append(titles, p.Title)
 	}
-	return titles
+	return titles, err
 }
 
-func GetAllPostTitlesOfYear(year string) []string {
+func GetPostTitlesOfYear(year string) ([]string, error) {
 	db := database.DB
 	var posts []Post
 	t, err := time.Parse("2006", year)
 	utils.Check(err, "Parse year")
 	start := now.With(t).BeginningOfYear()
 	end := now.With(t).EndOfYear()
-	db.Where("date between ? AND ?", start, end).Order("date desc").Select("title").Find(&posts)
+	err = db.Where("date between ? AND ?", start, end).Order("date desc").Select("title").Find(&posts).Error
 
 	var titles []string
 	for _, p := range posts {
 		titles = append(titles, p.Title)
 	}
-	return titles
+	return titles, err
 }
 
 func CreatePost(title string, content string, date time.Time) error {
@@ -79,14 +79,14 @@ func UpdatePost(id uint, title string, content string, date time.Time) error {
 	}
 }
 
-func SearchPosts(query string) []string {
+func SearchPosts(query string) ([]string, error) {
 	db := database.DB
 	var posts []Post
-	db.Select("title").Where("to_tsvector(title || ' ' || content) @@ to_tsquery(?)", query).Find(&posts)
+	err := db.Select("title").Where("to_tsvector(title || ' ' || content) @@ to_tsquery(?)", query).Find(&posts).Error
 
 	var titles []string
 	for _, p := range posts {
 		titles = append(titles, p.Title)
 	}
-	return titles
+	return titles, err
 }

@@ -2,21 +2,15 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/sbl1996/me/controllers/api"
-	"github.com/sbl1996/me/controllers/post"
 	"github.com/sbl1996/me/database"
 	"github.com/sbl1996/me/utils"
 )
-
-func helloHandler(c *gin.Context) {
-	c.String(http.StatusOK, "Hello")
-}
 
 func main() {
 	port := os.Getenv("PORT")
@@ -30,31 +24,17 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Logger())
-	router.LoadHTMLGlob("web/templates/*.tmpl.html")
-	router.NoRoute(func(c *gin.Context) {
-		c.HTML(http.StatusNotFound, "404.tmpl.html", gin.H{
-			"title": "Not Found",
-		})
-	})
-	router.StaticFile("/favicon.ico", "web/static/favicon.ico")
-	router.Static("/static", "web/static")
 
-	router.GET("/", func(c *gin.Context) {
-		c.Redirect(http.StatusMovedPermanently, "/posts")
-	})
+	router.StaticFile("/manifest.json", "web/public/manifest.json")
+	router.StaticFile("/favicon.ico", "web/public/favicon.ico")
+	router.StaticFile("/", "web/public/index.html")
+	router.StaticFile("/logo192.png", "web/public/logo192.png")
+	router.Static("/static", "web/public")
 
+	router.GET("/api/post", api.GetPostHandler())
+	router.GET("/api/posts", api.GetPostsHandler())
 	router.POST("/api/post", api.CreatePostHandler())
 	router.POST("/api/post/update", api.UpdatePostHandler())
 
-	router.GET("/posts", post.PostsHandler())
-	router.GET("/post/new", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "create.tmpl.html", gin.H{
-			"title": "New Post",
-		})
-	})
-	router.GET("/post", post.GetPostHandler())
-	router.GET("/post/edit/:id", post.EditPostHandler())
-	router.GET("/posts/search", post.SearchPostHandler())
-	router.GET("/hello", helloHandler)
 	router.Run(":" + port)
 }

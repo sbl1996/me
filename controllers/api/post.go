@@ -20,7 +20,10 @@ func CreatePostHandler() gin.HandlerFunc {
 		err = post.CreatePost(title, content, date)
 		utils.Check(err, "Inserting post")
 
-		c.Redirect(http.StatusMovedPermanently, "/post?title="+title)
+		c.Redirect(http.StatusMovedPermanently, "/post/"+title)
+		// c.JSON(http.StatusCreated, gin.H{
+		// 	title: title,
+		// })
 	}
 }
 
@@ -36,6 +39,54 @@ func UpdatePostHandler() gin.HandlerFunc {
 		err = post.UpdatePost(uint(id), title, content, date)
 		utils.Check(err, "Updating post")
 
-		c.Redirect(http.StatusMovedPermanently, "/post?title="+title)
+		c.Redirect(http.StatusMovedPermanently, "/post/"+title)
+	}
+}
+
+func GetPostHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var p post.Post
+		var err error
+
+		id := c.Query("id")
+		if id != "" {
+			id, err := strconv.ParseUint(id, 10, 64)
+			utils.Check(err, "Parse ID")
+			p, err = post.GetByID(uint(id))
+		} else {
+			title := c.Query("title")
+			p, err = post.GetByTitle(title)
+		}
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Post not found",
+			})
+		} else {
+			c.JSON(http.StatusOK, p)
+		}
+	}
+}
+
+func GetPostsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var titles []string
+		var err error
+
+		year := c.Query("year")
+		q := c.Query("q")
+		if (year == "") && (q == "") {
+			titles, err = post.GetAllPostTitles()
+		} else if year != "" {
+			titles, err = post.GetPostTitlesOfYear(year)
+		} else {
+			titles, err = post.SearchPosts(q)
+		}
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Posts not found",
+			})
+		} else {
+			c.JSON(http.StatusOK, titles)
+		}
 	}
 }

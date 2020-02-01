@@ -35,21 +35,28 @@ func PostsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		year := c.Query("year")
 		var titles []string
+		var err error
 		if year == "" {
-			titles = p.GetAllPostTitles()
+			titles, err = p.GetAllPostTitles()
 		} else {
-			titles = p.GetAllPostTitlesOfYear(year)
+			titles, err = p.GetPostTitlesOfYear(year)
 		}
-		c.HTML(http.StatusOK, "posts.tmpl.html", gin.H{
-			"titles": titles,
-		})
+		if err != nil {
+			c.HTML(http.StatusNotFound, "404.tmpl.html", gin.H{
+				"title": "Not Found",
+			})
+		} else {
+			c.HTML(http.StatusOK, "posts.tmpl.html", gin.H{
+				"titles": titles,
+			})
+		}
 	}
 }
 
 func SearchPostHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		q := c.Query("q")
-		titles := post.SearchPosts(q)
+		titles, _ := post.SearchPosts(q)
 		c.HTML(http.StatusOK, "posts.tmpl.html", gin.H{
 			"titles": titles,
 		})
