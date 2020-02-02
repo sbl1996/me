@@ -19,3 +19,7 @@ heroku: $(DOCKER_CMD)
 
 run: bin/server
 	heroku local
+
+front:
+	rm -rf /Users/hrvvi/Code/Go/me/web/public/*
+	cp -r /Users/hrvvi/Code/Web/me/build/* /Users/hrvvi/Code/Go/me/web/public
