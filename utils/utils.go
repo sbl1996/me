@@ -7,7 +7,7 @@ import (
 
 func Check(err error, info string) {
 	if err != nil {
-		log.Fatalf("%s: %q", info, err)
+		log.Printf("%s: %q", info, err)
 	}
 }
 

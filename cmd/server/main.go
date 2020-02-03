@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/contrib/static"
+	"github.com/gin-gonic/gin"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/sbl1996/me/controllers/api"
@@ -37,10 +37,11 @@ func main() {
 
 	apiRouter := router.Group("/api")
 	{
-		apiRouter.GET("/post", api.GetPostHandler())
+		apiRouter.GET("/posts/:id", api.GetPostHandler())
 		apiRouter.GET("/posts", api.GetPostsHandler())
-		apiRouter.POST("/post", api.CreatePostHandler())
-		apiRouter.POST("/post/update", api.UpdatePostHandler())
+		apiRouter.POST("/posts", api.CreatePostHandler())
+		apiRouter.PATCH("/posts", api.UpdatePostHandler())
+		apiRouter.DELETE("/posts/:id", api.DeletePostHandler())
 	}
 
 	router.Run(":" + port)

@@ -1,9 +1,10 @@
 package api
 
 import (
+	"log"
 	"net/http"
 	"strconv"
-	"time"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sbl1996/me/models/post"
@@ -12,51 +13,71 @@ import (
 
 func CreatePostHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		title := c.PostForm("title")
-		content := c.PostForm("content")
-		dateStr := c.PostForm("date")
-		date, err := time.Parse("2006-01-02T15:04", dateStr)
-		utils.Check(err, "Parse date")
-		err = post.CreatePost(title, content, date)
-		utils.Check(err, "Inserting post")
-
-		c.Redirect(http.StatusMovedPermanently, "/post/"+title)
-		// c.JSON(http.StatusCreated, gin.H{
-		// 	title: title,
-		// })
+		var p post.Post
+		err := c.ShouldBindJSON(&p)
+		if err != nil {
+			log.Printf("%s: %q", "Parse post", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		if strings.Contains(p.Title, "Fuck") {
+			err := "be polite"
+			log.Printf(err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err,
+			})
+		} else {
+			id, err := post.CreatePost(p.Title, p.Content, p.Date)
+			if err != nil {
+				log.Printf("%s: %q", "Create post", err)
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+			} else {
+				log.Printf("Created #%d", id)
+				c.JSON(http.StatusCreated, gin.H{
+					"ID": id,
+				})
+			}
+		}
 	}
 }
 
 func UpdatePostHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id, err := strconv.ParseUint(c.PostForm("id"), 10, 64)
-		utils.Check(err, "Parse ID")
-		title := c.PostForm("title")
-		content := c.PostForm("content")
-		dateStr := c.PostForm("date")
-		date, err := time.Parse("2006-01-02T15:04", dateStr)
-		utils.Check(err, "Parse date")
-		err = post.UpdatePost(uint(id), title, content, date)
-		utils.Check(err, "Updating post")
+		var p post.Post
+		err := c.ShouldBindJSON(&p)
+		if err != nil {
+			log.Printf("%s: %q", "Parse post", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 
-		c.Redirect(http.StatusMovedPermanently, "/post/"+title)
+		err = post.UpdatePost(p.ID, p.Title, p.Content, p.Date)
+		if err != nil {
+			log.Printf("%s: %q", "Update post", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		} else {
+			log.Printf("Updated #%d", p.ID)
+			c.Writer.WriteHeader(http.StatusOK)
+		}
 	}
 }
 
 func GetPostHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var p post.Post
-		var err error
 
-		id := c.Query("id")
-		if id != "" {
-			id, err := strconv.ParseUint(id, 10, 64)
-			utils.Check(err, "Parse ID")
-			p, err = post.GetByID(uint(id))
-		} else {
-			title := c.Query("title")
-			p, err = post.GetByTitle(title)
-		}
+		idStr := c.Param("id")
+		id, err := strconv.ParseUint(idStr, 10, 64)
+		utils.Check(err, "Parse ID")
+		p, err = post.GetByID(uint(id))
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Post not found",
@@ -69,24 +90,49 @@ func GetPostHandler() gin.HandlerFunc {
 
 func GetPostsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var titles []string
+		var items []post.PostItem
 		var err error
 
 		year := c.Query("year")
 		q := c.Query("q")
 		if (year == "") && (q == "") {
-			titles, err = post.GetAllPostTitles()
+			items, err = post.GetAllPostItems()
 		} else if year != "" {
-			titles, err = post.GetPostTitlesOfYear(year)
+			items, err = post.GetPostItemsByYear(year)
 		} else {
-			titles, err = post.SearchPosts(q)
+			items, err = post.SearchPosts(q)
 		}
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Posts not found",
 			})
 		} else {
-			c.JSON(http.StatusOK, titles)
+			c.JSON(http.StatusOK, items)
+		}
+	}
+}
+
+func DeletePostHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idStr := c.Param("id")
+		id, err := post.ParseID(idStr)
+		if err != nil {
+			log.Printf("%s: %q", "parse ID", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		err = post.DeletePost(id)
+		if err != nil {
+			log.Printf("%s: %q", "delete post", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		} else {
+			log.Printf("Deleted #%d", id)
+			c.Writer.WriteHeader(http.StatusOK)
 		}
 	}
 }
