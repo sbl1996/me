@@ -22,4 +22,4 @@ run: bin/server
 
 front:
 	rm -rf /Users/hrvvi/Code/Go/me/web/public/*
-	cp -r /Users/hrvvi/Code/Web/me/build/* /Users/hrvvi/Code/Go/me/web/public
+	cp -r /Users/hrvvi/Code/Web/myapp/dist/* /Users/hrvvi/Code/Go/me/web/public

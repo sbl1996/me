@@ -38,7 +38,7 @@ func CreatePostHandler() gin.HandlerFunc {
 			} else {
 				log.Printf("Created #%d", id)
 				c.JSON(http.StatusCreated, gin.H{
-					"ID": id,
+					"id": id,
 				})
 			}
 		}
